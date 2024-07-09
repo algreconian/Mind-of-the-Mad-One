@@ -1,71 +1,47 @@
-# Monitor-DomainAdminLogonAttempts.ps1
+# Utility PowerShell Scripts
 
 ## Overview
 
-This PowerShell script is designed to monitor and report on successful logon attempts by domain admin users within a specified timeframe (defaulting to the last 10 days). The script retrieves security logs from the Windows Event Log, filters for successful logon events (Event ID 4624), and extracts relevant information such as the timestamp, username, logon type, and computer name.
+These PowerShell scripts were developed in response to immediate needs encountered in my work as an IT professional. Each script is designed to address specific challenges and automate tasks that are often time-consuming and complex. My goal is to share these solutions in the hope that they will assist others facing similar issues, making their workflows more efficient and less stressful.
+
+## Why These Scripts?
+
+In the fast-paced world of IT, we often encounter urgent requirements that demand quick and effective solutions. Whether it's managing systems, automating repetitive tasks, or troubleshooting problems, having the right tools at your disposal can make all the difference. These scripts were created out of necessity, and by sharing them, I aim to help other IT professionals who might find themselves in similar situations. By leveraging these scripts, you can save time, reduce errors, and focus on more critical aspects of your work.
 
 ## Features
 
-- **Time Frame Specification:** Defines a start date, defaulting to 10 days prior to the current date, allowing it to focus on recent logon attempts.
-- **Event Filtering:** Filters the security logs to capture only successful logon events (Event ID 4624).
-- **Information Extraction:** Extracts critical information from the log events, including the time of creation, username, logon type, and computer name.
-- **System Account Exclusion:** Filters out system accounts and anonymous logon attempts to focus on actual user activity.
-- **Domain Admin Verification:** Includes a function to verify if a user is a domain admin by checking their membership in the 'Domain Admins' group.
-- **Domain Admin Access Logs:** Filters the logon attempts to identify and isolate those made by domain admin users.
-- **Unique User Grouping:** Groups the domain admin logon attempts by username to provide a unique list of domain admin users who accessed the server, along with the count of their logon attempts.
-- **Output Formatting:** Outputs the results in a neatly formatted table for easy review and analysis.
+- **Automation of Repetitive Tasks:** These scripts help automate routine tasks, reducing the manual effort required and minimizing the risk of human error.
+- **Efficiency:** Designed to streamline processes, these scripts can handle complex tasks quickly and efficiently, freeing up your time for other important activities.
+- **Reliability:** Each script has been tested in real-world scenarios to ensure it performs as expected, providing reliable solutions to common IT challenges.
+- **Customization:** The scripts are designed to be easily customizable, allowing you to adapt them to your specific needs and environment.
 
 ## Prerequisites
 
-- **PowerShell** installed and configured on the system.
-- **Administrative permissions** to access and read Windows Event Logs and Active Directory information.
+- **PowerShell** installed and configured on your system.
+- **Administrative permissions** may be required for certain scripts.
+- **Any additional tools or permissions** specific to the task being automated.
 
 ## Usage
 
-1. **Download and Save Script:**
-   Save the script as `Monitor-DomainAdminLogonAttempts.ps1`.
+1. **Download and Save Scripts:**
+   Save the scripts to your desired location on your system.
 
-2. **Edit the Script (if necessary):**
-   Modify any variables or settings within the script as needed to fit your environment.
+2. **Edit the Scripts (if necessary):**
+   Modify any variables or settings within the scripts to fit your environment and specific requirements.
 
-3. **Run the Script:**
-   Open PowerShell with administrative privileges and run the script:
+3. **Run the Scripts:**
+   Open PowerShell with administrative privileges and run the scripts using the appropriate commands:
+   ```powershell
+   .\ScriptName.ps1
 
-# Script Breakdown
+## Contributing
 
-```powershell
-$events = Get-WinEvent -FilterHashtable @{LogName='Security'; Id=$logonEventID; StartTime=$startDate} -MaxEvents 10000
+If you have any improvements or additional scripts that could benefit others, feel free to contribute to this repository. Collaboration and shared knowledge are key to solving common problems efficiently.
 
-# Define the start date (10 days ago)
-$startDate = (Get-Date).AddDays(-10)
+## Contact
 
-# Define the Event ID for successful logon attempts
-$logonEventID = 4624
+For any issues, questions, or suggestions regarding these scripts, please contact neplitude@gmail.com
 
-# Get the security logs for the specified event ID and time frame
-$events = Get-WinEvent -FilterHashtable @{LogName='Security'; Id=$logonEventID; StartTime=$startDate} -MaxEvents 10000
+## Acknowledgements
 
-# Extract relevant information
-$userAccessLogs = $events | Select-Object @{Name='TimeCreated'; Expression={$_.TimeCreated}},
-                                      @{Name='UserName'; Expression={($_.Properties[5].Value)}},
-                                      @{Name='LogonType'; Expression={($_.Properties[8].Value)}},
-                                      @{Name='ComputerName'; Expression={($_.MachineName)}}
-
-# Filter out system accounts and null values
-$userAccessLogs = $userAccessLogs | Where-Object { $_.UserName -ne '' -and $_.UserName -notlike 'NT AUTHORITY*' -and $_.UserName -notlike 'ANONYMOUS LOGON' }
-
-# Function to check if a user is a domain admin
-function Is-DomainAdmin($username) {
-    $domainAdminsGroup = [ADSI]"LDAP://CN=Domain Admins,CN=Users,DC=domain,DC=com"
-    $domainAdminsGroupMembers = $domainAdminsGroup.psbase.Invoke("Members") | ForEach-Object { $_.GetType().InvokeMember("SamAccountName", 'GetProperty', $null, $_, $null) }
-    return $domainAdminsGroupMembers -contains $username
-}
-
-# Check each user and filter for domain admins
-$domainAdminAccessLogs = $userAccessLogs | Where-Object { Is-DomainAdmin($_.UserName) }
-
-# Group and display unique domain admin users who accessed the server
-$uniqueDomainAdminAccessLogs = $domainAdminAccessLogs | Group-Object UserName | Select-Object Name, Count
-
-# Output the results
-$uniqueDomainAdminAccessLogs | Format-Table -AutoSize
+Thank you to the community of IT professionals who continuously share their knowledge and tools. Your contributions inspire and enable us to develop solutions that benefit everyone.
